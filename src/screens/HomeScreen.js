@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View, Button } from 'react-native';
 import Display from '../components/Display';
 import Teclado from '../components/Teclado';
@@ -18,16 +18,33 @@ export default function HomeScreen({ navigation }) {
   const [memoria, setMemoria] = useState(0);
   const [historico, setHistorico] = useState([]);
 
-  // carrega o histórico salvo, uma vez, quando a tela abre
+  // Atualiza a cópia local sempre que a Home volta a ficar visível.
   useEffect(() => {
-    carregar().then(setHistorico);
-  }, []);
+    let ativo = true;
+
+    async function atualizarHistorico() {
+      try {
+        const itens = await carregar();
+        if (ativo) setHistorico(itens);
+      } catch (erro) {
+        console.error('Não foi possível carregar o histórico:', erro);
+      }
+    }
+
+    const cancelarFoco = navigation.addListener('focus', atualizarHistorico);
+    if (navigation.isFocused()) atualizarHistorico();
+
+    return () => {
+      ativo = false;
+      cancelarFoco();
+    };
+  }, [navigation]);
 
   function limpar() {
     setExpressao('');
     setResultado('');
     setCalculado(false);
-  }
+  } 
 
   function valorAtual() {
     const v = calcular(expressao);
@@ -46,7 +63,10 @@ export default function HomeScreen({ navigation }) {
       conta: expressao,
       resultado: valor,
     };
-    const novo = [item, ...historico];
+    // Leia o armazenamento antes de acrescentar para não salvar uma cópia
+    // antiga do estado caso a tela tenha acabado de voltar do histórico.
+    const historicoAtual = await carregar();
+    const novo = [item, ...historicoAtual];
     setHistorico(novo);
     await salvar(novo);
   }
@@ -142,7 +162,7 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.botaoHistorico}>
         <Button
           title="Ver histórico"
-          onPress={() => navigation.navigate('Historico', { historico })}
+          onPress={() => navigation.navigate('Historico')}
         />
       </View>
     </View>
