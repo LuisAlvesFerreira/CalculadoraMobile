@@ -11,12 +11,29 @@ import {
 } from '../utils/calcular';
 import { carregar, salvar } from '../storage/historico';
 
-export default function HomeScreen({ navigation }) {
+export default function HomeScreen({ navigation, route }) {
   const [expressao, setExpressao] = useState('');
   const [resultado, setResultado] = useState('');
   const [calculado, setCalculado] = useState(false); // acabou de apertar =
   const [memoria, setMemoria] = useState(0);
   const [historico, setHistorico] = useState([]);
+
+  //EVOLUÇÃO 3: useEffect para verificar se a rota recebeu valor
+  useEffect(() => {
+    const valor = route.params?.valor;
+
+    //verifica se o valor foi recebido
+    if (valor === undefined) return;
+
+    setExpressao(String(valor));
+    setResultado('');
+    setCalculado(false);
+
+    //(DESAFIO EXTRA)Limpa o parâmetro para permitir selecionar novamente o mesmo resultado
+    navigation.setParams({valor: undefined});
+  },[route.params?.valor, navigation]);
+
+
 
   // Atualiza a cópia local sempre que a Home volta a ficar visível.
   //(Alteração) useEffect foi alterado para apagar dados do histórico que foram salvos em memória

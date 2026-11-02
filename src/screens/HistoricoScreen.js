@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState } from 'react';
-import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Pressable, StyleSheet, Text, View, TouchableOpacity } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { carregar, limpar, excluirLinha } from '../storage/historico';
 
-export default function HistoricoScreen({ route }) {
+export default function HistoricoScreen({ route, navigation }) {
   const [lista, setLista] = useState(route.params?.historico ?? []);
   const versaoLeitura = useRef(0);
 
@@ -59,10 +59,23 @@ export default function HistoricoScreen({ route }) {
         data={lista}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-           <View style = {styles.linhaItem}> 
-            <Text style={styles.linha}>
-              {item.conta} = {item.resultado}
-            </Text>
+          
+          <View style = {styles.linhaItem}> 
+
+            {/*Text trocado por Touchable Opacity e dentro da mesma View que o Excluir, assim tocar no texto volta para a tela inicial e excluir ainda exclui*/}
+            <TouchableOpacity
+              style={{flex: 1}}
+              onPress={() =>
+                navigation.popTo('Home', {
+                  valor: item.resultado,
+                })
+              }
+            >
+              <Text style = {styles.linha}>
+                {item.conta} = {item.resultado}
+              </Text>
+
+            </TouchableOpacity>
 
             {/*Botão de exclusão da conta*/}
             <Pressable
