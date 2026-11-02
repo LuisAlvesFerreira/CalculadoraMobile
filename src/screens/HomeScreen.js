@@ -19,6 +19,7 @@ export default function HomeScreen({ navigation }) {
   const [historico, setHistorico] = useState([]);
 
   // Atualiza a cópia local sempre que a Home volta a ficar visível.
+  //(Alteração) useEffect foi alterado para apagar dados do histórico que foram salvos em memória
   useEffect(() => {
     let ativo = true;
 
@@ -30,7 +31,7 @@ export default function HomeScreen({ navigation }) {
         console.error('Não foi possível carregar o histórico:', erro);
       }
     }
-
+    //A variável abaixo é responsável por atualizar o histórico toda vez que o mesmo ganha foco, para apagar completamente registros do histórico.
     const cancelarFoco = navigation.addListener('focus', atualizarHistorico);
     if (navigation.isFocused()) atualizarHistorico();
 

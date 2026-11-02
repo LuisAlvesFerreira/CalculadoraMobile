@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import { carregar, limpar } from '../storage/historico';
+import { carregar, limpar, excluirLinha } from '../storage/historico';
 
 export default function HistoricoScreen({ route }) {
   const [lista, setLista] = useState(route.params?.historico ?? []);
@@ -22,7 +22,9 @@ export default function HistoricoScreen({ route }) {
     }, [])
   );
 
-  async function aoLimparHistorico() {
+  //função que chama o limpar e atualiza a lista, além de fazer verificação do funcionamento do botão e previnir erros.
+  //Preferi criar  funções próprias ao invés de adicionar diretamente para deixar o código mais limpo.
+  async function aoLimparHistorico() {  
     console.log('Botão Deletar histórico pressionado');
     // Invalida uma leitura iniciada antes do toque em deletar.
     ++versaoLeitura.current;
@@ -34,6 +36,22 @@ export default function HistoricoScreen({ route }) {
     }
   }
 
+  //função que executa a função de exclusão e mostra mensagem de erro.
+  async function aoExcluir(id) {
+    ++versaoLeitura.current;
+
+    try{
+
+      const novaLista = await excluirLinha(id);
+      setLista(novaLista);
+
+    } catch(erro){
+      console.error('Não foi possível excluir a conta', erro)
+    }
+    
+  }
+
+
   return (
     <View style={styles.container}>
       <FlatList
@@ -41,15 +59,30 @@ export default function HistoricoScreen({ route }) {
         data={lista}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <Text style={styles.linha}>
-            {item.conta} = {item.resultado}
-          </Text>
+           <View style = {styles.linhaItem}> 
+            <Text style={styles.linha}>
+              {item.conta} = {item.resultado}
+            </Text>
+
+            {/*Botão de exclusão da conta*/}
+            <Pressable
+              accessibilityRole='button'
+              onPress={() => aoExcluir(item.id)}
+              style ={styles.botaoExcluir}
+
+            >
+              <Text style={styles.textoBotao}>Excluir</Text>
+              
+            </Pressable>
+          </View>
+
         )}
         ListEmptyComponent={
           <Text style={styles.linha}>Nenhuma conta ainda</Text>
         }
       />
-
+      
+      {/*Eu tive problemas no funcionamento do Button, por isso preferi utilizar Pressable */}
       <View style={styles.botaoDeletarHistorico}>
         <Pressable
           accessibilityRole="button"
@@ -99,4 +132,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
+
+  linhaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  }
 });
